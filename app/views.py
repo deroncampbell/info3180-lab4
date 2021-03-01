@@ -6,7 +6,7 @@ This file creates your application.
 """
 import os
 from app import app
-from flask import render_template, request, redirect, url_for, flash, session, abort
+from flask import render_template, request, redirect, url_for, flash, session, abort, send_from_directory
 from wtforms.validators import DataRequired
 from werkzeug.utils import secure_filename
 from .forms import UploadForm
@@ -73,6 +73,26 @@ def logout():
     flash('You were logged out', 'success')
     return redirect(url_for('home'))
 
+def get_uploaded_images():
+    imglst = []
+    root_dir = os.getcwd()
+    for subdir, dirs, files in os.walk(root_dir + '/uploads'):
+        for file in files:
+            imglst.append(file)
+    return imglst
+
+  
+@app.route("/uploads/<filename>")
+def get_image(filename):
+    root_dir = os.getcwd()
+    return send_from_directory(os.path.join(root_dir, app.config['UPLOAD_FOLDER']), filename)
+
+@app.route('/files')
+def files():
+    if not session.get('logged_in'):
+        abort(404)
+    limgs = get_uploaded_images()
+    return render_template("files.html",limgs=limgs)
 
 ###
 # The functions below should be applicable to all Flask apps.
